@@ -41,12 +41,30 @@
         </div>
 
         <section class="form-section">
-            <h2 class="section-title">OUTPUT</h2>
+            <h2 class="section-title">OUTPUT DR.KSP</h2>
             <textarea id="output-script" readonly placeholder="Hasil script akan muncul di sini setelah klik 'Convert Script'..."></textarea>
         </section>
 
         <div class="copy-button-container">
             <button id="copy-script-btn" class="form-button copy">COPY SCRIPT</button>
+        </div>
+
+		<section class="form-section-summary">
+            <h2 class="section-title">OUTPUT DR.FO1</h2>
+            <textarea id="output-script-summary" readonly placeholder="Output untuk DR.NCDC  ..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn-summary" class="form-button copy">COPY OUTPUT NCDC</button>
+        </div>
+
+		<section class="form-section-summary2">
+            <h2 class="section-title">OUTPUT DR.FO2</h2>
+            <textarea id="output-script-summary2" readonly placeholder="Output untuk DR.NCDC  ..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn-summary2" class="form-button copy">COPY OUTPUT NCDC</button>
         </div>
 
     </main>
@@ -56,8 +74,12 @@
         const namaKlienEl = document.getElementById('nama-klien');
         const ipAddressEl = document.getElementById('ip-address');
         const outputScriptEl = document.getElementById('output-script');
+		const outputSummaryEl = document.getElementById('output-script-summary');
+		const outputSummary2El = document.getElementById('output-script-summary2');
         const convertScriptBtn = document.getElementById('convert-script-btn');
         const copyScriptBtn = document.getElementById('copy-script-btn');
+		const copyScriptBtnSummary = document.getElementById('copy-script-btn-summary');
+		const copyScriptBtnSummary2 = document.getElementById('copy-script-btn-summary2');
         const clearBtn = document.getElementById('clear-btn'); // BARU
 
        
@@ -66,6 +88,8 @@
             namaKlienEl.value = '';
             ipAddressEl.value = '';
             outputScriptEl.value = '';
+			outputSummaryEl.value = '';
+			outputSummary2El.value = '';
             // Fokuskan kembali ke input pertama untuk kemudahan
             namaKlienEl.focus();
         }
@@ -85,6 +109,16 @@
 /queue simple remove [find where target="${ipAddress}"]`;
 
             outputScriptEl.value = finalScript;
+
+            const summaryScript = `/interface vlan remove [find where name="DR1---${namaKlien}"]
+/queue simple remove [find where target="${ipAddress}"]`;
+
+            outputSummaryEl.value = summaryScript;
+
+            const summary2Script = `/interface vlan remove [find where name="DR2---${namaKlien}"]
+/queue simple remove [find where target="${ipAddress}"]`;
+
+            outputSummary2El.value = summary2Script;
         });
         
         copyScriptBtn.addEventListener('click', () => {
@@ -106,6 +140,47 @@
                 alert('Gagal menyalin script: ', err);
             });
         });
+		
+        copyScriptBtnSummary.addEventListener('click', () => {
+            if (!outputSummaryEl.value) {
+                alert('Tidak ada script untuk disalin!');
+                return;
+            }
+            navigator.clipboard.writeText(outputSummaryEl.value).then(() => {
+                const originalText = copyScriptBtnSummary.textContent;
+                copyScriptBtnSummary.textContent = 'COPIED!';
+                copyScriptBtnSummary.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    copyScriptBtnSummary.textContent = originalText;
+                    copyScriptBtnSummary.backgroundColor = '';
+                }, 2000);
+                
+            }).catch(err => {
+                alert('Gagal menyalin script: ', err);
+            });
+        });
+
+        copyScriptBtnSummary2.addEventListener('click', () => {
+            if (!outputSummary2El.value) {
+                alert('Tidak ada script untuk disalin!');
+                return;
+            }
+            navigator.clipboard.writeText(outputSummary2El.value).then(() => {
+                const originalText = copyScriptBtnSummary2.textContent;
+                copyScriptBtnSummary2.textContent = 'COPIED!';
+                copyScriptBtnSummary2.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    copyScriptBtnSummary2.textContent = originalText;
+                    copyScriptBtnSummary2.style.backgroundColor = '';
+                }, 2000);
+                
+            }).catch(err => {
+                alert('Gagal menyalin script: ', err);
+            });
+        });
+
 
     </script>
 
