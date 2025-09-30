@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPRESSIVE - PPPoE Provisioning</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="page-header">
+        <div class="header-container">
+            <a href="ganti_layanan.html" class="back-button">Back</a>
+            <a href="index.html" class="back-button home">Home</a>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <h1 class="page-title">Ganti Layanan IMPRESSIVE</h1>
+
+        <section class="form-section">
+            <h2 class="section-title">INPUT</h2>
+            <div class="input-grid">
+                <div class="form-group">
+                    <label for="nama-klien">Nama Klien</label>
+                    <input type="text" id="nama-klien">
+                </div>
+                <div class="form-group">
+                    <label for="service-id">Service-ID</label>
+                    <input type="text" id="service-id">
+                </div>
+                <div class="form-group">
+                    <label for="layanan">Layanan Baru(Mbps)</label>
+                    <input type="number" id="layanan" placeholder="Contoh: 50">
+                </div>
+                <div class="form-group">
+                    <label for="ip-address-old">IP Address Lama</label>
+                    <input type="text" id="ip-address-old" placeholder="Isi lengkap dengan CIDR">
+                </div>
+				<div class="form-group">
+                    <label for="ip-address-baru">IP Address Baru</label>
+                    <input type="text" id="ip-address-baru" placeholder="Isi lengkap dengan CIDR">
+                </div>
+                <div class="form-group">
+                    <label for="parent-name">Parent name</label>
+                    <input type="text" id="parent-name">
+                </div>
+            </div>
+        </section>
+        
+        <div class="action-buttons-container">
+            <button id="convert-script-btn" class="form-button primary">CONVERT SCRIPT</button>
+            <button id="clear-btn" class="form-button secondary">CLEAR</button>
+        </div>
+
+        <section class="form-section">
+            <h2 class="section-title">OUTPUT</h2>
+            <textarea id="output-script" readonly placeholder="Hasil script akan muncul di sini setelah klik 'Convert Script'..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn" class="form-button copy">COPY SCRIPT</button>
+        </div>
+		
+		<section class="form-section-summary">
+            <h2 class="section-title">SUMMARY</h2>
+            <textarea id="output-script-summary" readonly placeholder="Summary Perubahan Layanan..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn-summary" class="form-button copy">COPY SUMMARY</button>
+        </div>
+
+    </main>
+
+<script>
+    // --- Mendapatkan semua elemen dari HTML ---
+    const namaKlienEl = document.getElementById('nama-klien');
+    const serviceIdEl = document.getElementById('service-id');
+    const layananEl = document.getElementById('layanan');
+    const ipAddressOldEl = document.getElementById('ip-address-old');
+    const ipAddressBaruEl = document.getElementById('ip-address-baru');
+    const parentNameEl = document.getElementById('parent-name');
+    const outputScriptEl = document.getElementById('output-script');
+    const outputScriptSumEl = document.getElementById('output-script-summary');
+
+    const convertScriptBtn = document.getElementById('convert-script-btn');
+    const copyScriptBtn = document.getElementById('copy-script-btn');
+    // DIPERBAIKI: Nama variabel untuk tombol kedua diubah agar tidak duplikat
+    const copySummaryBtn = document.getElementById('copy-script-btn-summary'); 
+    const clearBtn = document.getElementById('clear-btn');
+    
+    // --- Fungsi untuk membersihkan form ---
+    function clearForm() {
+        namaKlienEl.value = '';
+        serviceIdEl.value = '';
+        layananEl.value = '';
+        ipAddressOldEl.value = '';
+        ipAddressBaruEl.value = '';
+        parentNameEl.value = '';
+        outputScriptEl.value = '';
+        outputScriptSumEl.value = '';
+        namaKlienEl.focus();
+    }
+
+    // --- Event Listener ---
+    clearBtn.addEventListener('click', clearForm);
+
+    convertScriptBtn.addEventListener('click', () => {
+        const namaKlien = namaKlienEl.value;
+        const layanan = layananEl.value;
+        const serviceId = serviceIdEl.value;
+        const ipAddressOld = ipAddressOldEl.value;
+        const ipAddressBaru = ipAddressBaruEl.value;
+        const parentName = parentNameEl.value;
+        
+        if (!namaKlien || !layanan || !serviceId || !ipAddressOld || !ipAddressBaru || !parentName) {
+            alert('Harap isi semua kolom input yang diperlukan!');
+            return;
+        }
+
+        // --- PERUBAHAN LOGIKA DI SINI ---
+        const limiterName = `IMP-${layanan} - ${serviceId} - ${namaKlien.toUpperCase()}`;
+        const layananNew = layanan + "M";
+        const targetIpOld = ipAddressOld;
+        const targetIpBaru = ipAddressBaru;
+        const parent = parentName;
+        const limitat = Math.floor(parseInt(layanan) / 2) + "M";
+        
+        // DIPERBAIKI: Menggunakan 'const' dan backtick (`)
+        const finalSummary = `Ganti IP\nNama Klien = ${namaKlien}\nIP Lama = ${targetIpOld}\nIP Baru = ${targetIpBaru}`;
+
+        // Gabungkan menjadi script akhir sesuai format IMPRESSIVE
+        const finalScript = `/queue simple remove [ find where target=${targetIpOld} ]
+/queue simple add name="${limiterName}" target=${targetIpBaru} max-limit=${layananNew}/${layananNew} parent="${parent}" priority=8/8 limit-at=${limitat}/${limitat}`;
+
+        // Menampilkan hasil ke masing-masing textarea
+        outputScriptEl.value = finalScript;
+        outputScriptSumEl.value = finalSummary; // DIPERBAIKI: Baris ini ditambahkan
+    });
+    
+    // Fungsi untuk tombol "COPY SCRIPT"
+    copyScriptBtn.addEventListener('click', () => {
+        if (!outputScriptEl.value) {
+            alert('Tidak ada script untuk disalin!');
+            return;
+        }
+        navigator.clipboard.writeText(outputScriptEl.value).then(() => {
+            const originalText = copyScriptBtn.textContent;
+            copyScriptBtn.textContent = 'COPIED!';
+            copyScriptBtn.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                copyScriptBtn.textContent = originalText;
+                copyScriptBtn.style.backgroundColor = '';
+            }, 2000);
+        }).catch(err => {
+            alert('Gagal menyalin script: ', err);
+        });
+    });
+
+    // BARU: Fungsi untuk tombol "COPY SUMMARY"
+    copySummaryBtn.addEventListener('click', () => {
+        if (!outputScriptSumEl.value) {
+            alert('Tidak ada summary untuk disalin!');
+            return;
+        }
+        navigator.clipboard.writeText(outputScriptSumEl.value).then(() => {
+            const originalText = copySummaryBtn.textContent;
+            copySummaryBtn.textContent = 'COPIED!';
+            copySummaryBtn.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                copySummaryBtn.textContent = originalText;
+                copySummaryBtn.style.backgroundColor = '';
+            }, 2000);
+        }).catch(err => {
+            alert('Gagal menyalin summary: ', err);
+        });
+    });
+
+</script>
+
+</body>
+</html>

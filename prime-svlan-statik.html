@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRIME - Single Vlan Static Provisioning</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="page-header">
+        <div class="header-container">
+            <a href="instalasi.html" class="back-button">Back</a>
+            <a href="index.html" class="back-button home">Home</a>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <h1 class="page-title">PRIME - Single Vlan Static Provisioning</h1>
+
+        <section class="form-section">
+            <h2 class="section-title">INPUT</h2>
+            <div class="input-grid">
+                <div class="form-group">
+                    <label for="nama-klien">Nama Klien</label>
+                    <input type="text" id="nama-klien">
+                </div>
+                <div class="form-group">
+                    <label for="layanan">Layanan (Mbps)</label>
+                    <input type="number" id="layanan" placeholder="Contoh: 50">
+                </div>
+                <div class="form-group">
+                    <label for="vlan-name">Vlan name</label>
+                    <input type="text" id="vlan-name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ip-address">IP Address (dengan CIDR)</label>
+                    <input type="text" id="ip-address" placeholder="Contoh: 192.168.5.5/29">
+                </div>
+                <div class="form-group">
+                    <label for="service-id">Service ID</label>
+                    <input type="text" id="service-id">
+                </div>
+            </div>
+        </section>
+        
+        <div class="action-buttons-container">
+            <button id="convert-script-btn" class="form-button primary">CONVERT SCRIPT</button>
+            <button id="clear-btn" class="form-button secondary">CLEAR</button>
+        </div>
+
+        <section class="form-section">
+            <h2 class="section-title">OUTPUT</h2>
+            <textarea id="output-script" readonly placeholder="Hasil script akan muncul di sini setelah klik 'Convert Script'..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn" class="form-button copy">COPY SCRIPT</button>
+        </div>
+
+    </main>
+
+    <script>
+        // --- 1. Mendapatkan semua elemen dari HTML ---
+        const namaKlienEl = document.getElementById('nama-klien');
+        const layananEl = document.getElementById('layanan');
+        const serviceIdEl = document.getElementById('service-id');
+        const ipAddressEl = document.getElementById('ip-address');
+        const vlanNameEl = document.getElementById('vlan-name');
+        const outputScriptEl = document.getElementById('output-script');
+
+        const convertScriptBtn = document.getElementById('convert-script-btn');
+        const copyScriptBtn = document.getElementById('copy-script-btn');
+        const clearBtn = document.getElementById('clear-btn');
+
+        // --- 2. Fungsi untuk menghitung Network Address dari IP/CIDR ---
+        function getNetworkAddress(ipCidr) {
+            try {
+                const [ip, prefixStr] = ipCidr.split('/');
+                if (!ip || !prefixStr) { throw new Error("Format tidak valid."); }
+                const prefix = parseInt(prefixStr, 10);
+                if (isNaN(prefix) || prefix < 0 || prefix > 32) { throw new Error("Prefix CIDR tidak valid."); }
+                const ipParts = ip.split('.').map(part => parseInt(part, 10));
+                if (ipParts.length !== 4 || ipParts.some(isNaN)) { throw new Error("Alamat IP tidak valid."); }
+                const mask = -1 << (32 - prefix);
+                const ipInt = (ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3];
+                const networkInt = ipInt & mask;
+                const oct1 = (networkInt >>> 24) & 255;
+                const oct2 = (networkInt >>> 16) & 255;
+                const oct3 = (networkInt >>> 8) & 255;
+                const oct4 = networkInt & 255;
+                return `${oct1}.${oct2}.${oct3}.${oct4}/${prefix}`;
+            } catch (e) {
+                console.error(e);
+                return null;
+            }
+        }
+
+        // --- 3. Fungsi untuk membersihkan semua input dan output ---
+        function clearForm() {
+            namaKlienEl.value = '';
+            layananEl.value = '';
+            serviceIdEl.value = '';
+            ipAddressEl.value = '';
+            vlanNameEl.value = '';
+            outputScriptEl.value = '';
+            namaKlienEl.focus();
+        }
+
+        // --- 4. Event Listener untuk Tombol-tombol ---
+        clearBtn.addEventListener('click', clearForm);
+
+        convertScriptBtn.addEventListener('click', () => {
+            const namaKlien = namaKlienEl.value;
+            const layanan = layananEl.value;
+            const serviceId = serviceIdEl.value;
+            const ipAddress = ipAddressEl.value;
+            const vlanName = vlanNameEl.value;
+            
+            if (!namaKlien || !layanan || !serviceId || !ipAddress || !vlanName) {
+                alert('Harap isi semua kolom input yang diperlukan!');
+                return;
+            }
+
+            const target = getNetworkAddress(ipAddress);
+            if (!target) {
+                alert('Format IP Address tidak valid! Harap gunakan format IP/CIDR, contoh: 192.168.5.5/29');
+                return;
+            }
+            
+            const limiterName = `PRM-${layanan} - ${serviceId} - ${namaKlien.toUpperCase()}`;
+            const burstLimit = (parseInt(layanan) * 2) + "M";
+            const layananNew = layanan + "M";
+            const burstTress = (parseInt(layanan) - 1) + "M";
+
+            const finalScript = `/ip address add address=${ipAddress} interface=${vlanName} comment="IP Gateway ${namaKlien}"
+/queue simple add burst-limit=${burstLimit}/${burstLimit} burst-threshold=${burstTress}/${burstTress} burst-time=20s/20s max-limit=${layananNew}/${layananNew} name="${limiterName}" target=${target}`;
+
+            outputScriptEl.value = finalScript;
+        });
+        
+        copyScriptBtn.addEventListener('click', () => {
+            if (!outputScriptEl.value) {
+                alert('Tidak ada script untuk disalin!');
+                return;
+            }
+            navigator.clipboard.writeText(outputScriptEl.value).then(() => {
+                const originalText = copyScriptBtn.textContent;
+                copyScriptBtn.textContent = 'COPIED!';
+                copyScriptBtn.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    copyScriptBtn.textContent = originalText;
+                    copyScriptBtn.style.backgroundColor = '';
+                }, 2000);
+                
+            }).catch(err => {
+                alert('Gagal menyalin script: ', err);
+            });
+        });
+
+    </script>
+
+</body>
+</html>

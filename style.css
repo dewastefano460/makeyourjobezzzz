@@ -1,0 +1,407 @@
+/* Pengaturan Dasar dan Font */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+    background-color: #ffffff;
+    color: #333;
+    overflow-x: hidden; /* Mencegah scroll horizontal */
+}
+
+/* Kontainer utama untuk menengahkan konten */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 90vh; /* Mengisi layar tapi menyisakan ruang untuk wave */
+    text-align: center;
+    padding: 20px;
+}
+
+/* Judul dan Sub-judul */
+.hero-content h1 {
+    font-size: 4rem; /* Ukuran font besar untuk judul utama */
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.hero-content .subtitle {
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: #7f8c8d;
+    margin-top: 0.5rem;
+    margin-bottom: 3rem; /* Jarak antara sub-judul dan tombol */
+}
+
+/* Navigasi Utama */
+.main-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* Agar tombol turun ke bawah jika layar sempit */
+    gap: 1.5rem; /* Jarak antar tombol */
+}
+
+/* Gaya Tombol Navigasi */
+.nav-button {
+    display: inline-block;
+    background-color: #4A69E2; /* Warna biru keunguan */
+    color: #ffffff;
+    padding: 1rem 2.5rem;
+    border-radius: 50px; /* Membuat tombol sangat membulat */
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(74, 105, 226, 0.3);
+    transition: all 0.3s ease;
+}
+
+.nav-button:hover, .nav-button:focus {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(74, 105, 226, 0.4);
+    background-color: #5879ff;
+}
+
+/* Kontainer untuk Gelombang di Bawah */
+.wave-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: -1; /* Meletakkan gelombang di belakang konten */
+}
+
+.wave-container svg {
+    display: block; /* Menghilangkan spasi ekstra di bawah SVG */
+    width: 100%;
+}
+
+/* Desain Responsif untuk Layar Kecil (Mobile) */
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2.8rem;
+    }
+
+    .hero-content .subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .main-nav {
+        flex-direction: column; /* Tombol disusun vertikal */
+        width: 80%;
+    }
+
+    .nav-button {
+        width: 100%; /* Tombol memenuhi lebar kontainer */
+        padding: 1rem;
+    }
+}
+
+
+/* ========================================= */
+/* == STYLE UNTUK HALAMAN INSTALASI == */
+/* ========================================= */
+
+/* Latar belakang halaman yang sedikit berbeda */
+body {
+    background-color: #f4f7f6;
+}
+
+/* Header Halaman Internal */
+.page-header {
+    padding: 20px;
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.back-button {
+    display: inline-block;
+    background-color: #6c757d; /* Warna abu-abu netral */
+    color: #ffffff;
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Kontainer utama konten */
+.content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 40px; /* Padding bawah lebih besar */
+}
+
+.page-title {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 3rem;
+}
+
+/* Grid untuk kartu provisioning */
+.provisioning-grid {
+    display: grid;
+    /* Membuat 3 kolom di layar besar, dan otomatis menyesuaikan di layar kecil */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem; /* Jarak antar kartu */
+}
+
+/* Styling untuk setiap kartu */
+.provisioning-card {
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 16px; /* Sudut lebih membulat */
+    padding: 2rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.provisioning-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 2rem;
+}
+
+/* Grup tombol di dalam kartu */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    width: 85%; /* Lebar tombol relatif terhadap kartu */
+    gap: 1rem; /* Jarak antar tombol di dalam kartu */
+}
+
+/* Tombol aksi di dalam kartu */
+.action-button {
+    display: block;
+    background-color: #4A69E2;
+    color: #ffffff;
+    padding: 0.9rem 1rem;
+    border-radius: 50px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-button:hover {
+    background-color: #5879ff;
+    transform: scale(1.05); /* Sedikit membesar saat disentuh */
+}
+
+/* Penyesuaian untuk layar mobile */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2.2rem;
+    }
+}
+
+/* ========================================= */
+/* == STYLE UNTUK HALAMAN FORM PROVISIONING == */
+/* ========================================= */
+
+.form-section {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+.form-section-summary {
+	margin-top: 50px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    letter-spacing: 1px;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 kolom */
+    gap: 1rem 2rem; /* Jarak baris dan kolom */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #34495e;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus,
+textarea:focus {
+    outline: none;
+    border-color: #4A69E2;
+    box-shadow: 0 0 0 3px rgba(74, 105, 226, 0.2);
+}
+
+/* Style khusus untuk input yang readonly */
+.form-group input[readonly] {
+    background-color: #f5f7fa;
+    cursor: not-allowed;
+    color: #5a6268;
+}
+
+/* Kontainer tombol aksi tengah */
+.action-buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.form-button {
+    background-color: #898f9c;
+    color: white;
+    padding: 0.8rem 1.8rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-button.primary {
+    background-color: #4A69E2;
+}
+
+.form-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Area output */
+#output-script {
+    min-height: 200px;
+    background-color: #1a1b26; /* Dark background for code */
+    color: #c0caf5; /* Light text for code */
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.95rem;
+    white-space: pre; /* Mempertahankan spasi dan baris baru */
+    resize: vertical;
+}
+
+/* Area output */
+#output-script-summary {
+    min-height: 200px;
+    background-color: #1a1b26; /* Dark background for code */
+    color: #c0caf5; /* Light text for code */
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.95rem;
+    white-space: pre; /* Mempertahankan spasi dan baris baru */
+    resize: vertical;
+}
+
+/* Kontainer tombol copy */
+.copy-button-container {
+    text-align: center;
+}
+
+.form-button.copy {
+    width: 50%;
+    max-width: 400px;
+    padding: 1rem;
+    font-size: 1.1rem;
+    background-color: #4A69E2;
+}
+
+/* Responsif untuk layar kecil */
+@media (max-width: 768px) {
+    .input-grid {
+        grid-template-columns: 1fr; /* 1 kolom saja */
+    }
+    
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .form-button.copy {
+        width: 100%;
+    }
+}
+
+/* Mengatur jarak antara tombol Back dan Home */
+.header-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Jarak antar tombol */
+}
+
+/* Warna berbeda untuk tombol Home agar mudah dibedakan */
+.back-button.home {
+    background-color: #007bff; /* Warna biru yang umum untuk 'Home' */
+}
+
+.back-button.home:hover {
+    background-color: #0069d9;
+}
+
+/* Warna untuk tombol Clear (secondary) */
+.form-button.secondary {
+    background-color: #6c757d; /* Abu-abu netral */
+}
+
+.form-button.secondary:hover {
+    background-color: #5a6268;
+}

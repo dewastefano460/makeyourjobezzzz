@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRIME - PPPoE Provisioning</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="page-header">
+        <div class="header-container">
+            <a href="instalasi.html" class="back-button">Back</a>
+            <a href="index.html" class="back-button home">Home</a>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <h1 class="page-title">Bitstream - IP Private Provisioning</h1>
+
+        <section class="form-section">
+            <h2 class="section-title">INPUT</h2>
+            <div class="input-grid">
+                <div class="form-group">
+                    <label for="nama-klien">Nama Klien</label>
+                    <input type="text" id="nama-klien">
+                </div>
+                <div class="form-group">
+                    <label for="layanan">Layanan (Mbps)</label>
+                    <input type="number" id="layanan" placeholder="Contoh: 50">
+                </div>
+                <div class="form-group">
+                    <label for="service-id">Service ID</label>
+                    <input type="text" id="service-id">
+                </div>
+                <!-- Kolom ini akan diisi dengan Private Key WireGuard -->
+                <div class="form-group">
+                    <label for="wg-private-key">WG Private Key</label>
+                    <input type="text" id="wg-private-key" readonly placeholder="Klik 'Generate WG' untuk membuat kunci">
+                </div>
+                <!-- Kolom ini akan diisi dengan Public Key WireGuard -->
+                <div class="form-group">
+                    <label for="wg-public-key">WG Public Key</label>
+                    <input type="text" id="wg-public-key" readonly placeholder="Klik 'Generate WG' untuk membuat kunci">
+                </div>               
+                <div class="form-group">
+                    <label for="ip-address">IP Address Monitoring</label>
+                    <input type="text" id="ip-address">
+                </div>
+                <div class="form-group">
+                    <label for="parent-name">Parent name</label>
+                    <input type="text" id="parent-name">
+                </div>
+                <div class="form-group">
+                    <label for="ip-wan">IP WAN ONU Telkom</label>
+                    <input type="text" id="ip-wan">
+                </div>				
+            </div>
+        </section>
+        
+        <div class="action-buttons-container">
+            <!-- Tombol ini sekarang akan generate WireGuard keys -->
+            <button id="generate-wg-btn" class="form-button">GENERATE WG</button>
+            <button id="convert-script-btn" class="form-button primary">CONVERT SCRIPT</button>
+            <button id="clear-btn" class="form-button secondary">CLEAR</button>
+        </div>
+
+        <section class="form-section">
+            <h2 class="section-title">SCRIPT FOR DR.Retail-v7</h2>
+            <textarea id="output-script" readonly placeholder="Hasil script akan muncul di sini setelah klik 'Convert Script'..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn" class="form-button copy">COPY SCRIPT</button>
+        </div>
+		
+		<section class="form-section-summary">
+            <h2 class="section-title">SCRIPT FOR KLIEN</h2>
+            <textarea id="output-script-summary" readonly placeholder="Output untuk DR.NCDC  ..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn-summary" class="form-button copy">COPY OUTPUT NCDC</button>
+        </div>
+
+    </main>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl.min.js"></script>
+    <script>
+        // --- 1. Mendapatkan semua elemen dari HTML ---
+        const namaKlienEl = document.getElementById('nama-klien');
+        const layananEl = document.getElementById('layanan');
+        const serviceIdEl = document.getElementById('service-id');
+        // Ganti passwordEl menjadi wgPrivateKeyEl
+        const wgPrivateKeyEl = document.getElementById('wg-private-key');
+        const wgPublicKeyEl = document.getElementById('wg-public-key');
+        const ipAddressEl = document.getElementById('ip-address');
+        const outputScriptEl = document.getElementById('output-script');
+		const parentNameEl = document.getElementById('parent-name'); // BARU
+		const outputScriptSumEl = document.getElementById('output-script-summary');
+		const IpWanEl = document.getElementById('ip-wan');
+
+        const generateSnBtn = document.getElementById('generate-sn-btn');
+        const generateWgBtn = document.getElementById('generate-wg-btn');
+        const convertScriptBtn = document.getElementById('convert-script-btn');
+        const copyScriptBtn = document.getElementById('copy-script-btn');
+		const copySummaryBtn = document.getElementById('copy-script-btn-summary');
+        const clearBtn = document.getElementById('clear-btn'); // BARU
+
+        // --- 3. Fungsi untuk Generate Password ---
+        // --- Fungsi util untuk konversi Base64 ---
+        function bytesToBase64(bytes) {
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        // Klamp private key sesuai X25519/WireGuard
+        function clampPrivateKey(sk) {
+            const clamped = new Uint8Array(sk);
+            clamped[0] &= 248;
+            clamped[31] &= 127;
+            clamped[31] |= 64;
+            return clamped;
+        }
+
+        // Fungsi untuk generate WireGuard private/public key
+        function generateWgKeys() {
+            if (typeof nacl === 'undefined' || !nacl.scalarMult || !nacl.scalarMult.base) {
+                alert('Library tweetnacl belum dimuat.');
+                return;
+            }
+            // Buat random 32 byte
+            let raw = new Uint8Array(32);
+            if (window.crypto && window.crypto.getRandomValues) {
+                window.crypto.getRandomValues(raw);
+            } else {
+                raw = nacl.randomBytes(32);
+            }
+            const clamped = clampPrivateKey(raw);
+            const pub = nacl.scalarMult.base(clamped);
+            // Update kolom input
+            wgPrivateKeyEl.value = bytesToBase64(clamped);
+            wgPublicKeyEl.value = bytesToBase64(pub);
+        }
+
+        
+        // --- BARU: Fungsi untuk membersihkan semua input dan output ---
+        function clearForm() {
+            namaKlienEl.value = '';
+            layananEl.value = '';
+            serviceIdEl.value = '';
+            wgPrivateKeyEl.value = '';
+            wgPublicKeyEl.value = '';
+            ipAddressEl.value = '';
+            outputScriptEl.value = '';
+			parentNameEl.value = ''; // BARU
+			IpWanEl.value = '';
+			outputScriptSumEl.value = '';
+            // Fokuskan kembali ke input pertama untuk kemudahan
+            namaKlienEl.focus();
+        }
+
+        // Generate WireGuard keys saat tombol diklik
+        generateWgBtn.addEventListener('click', generateWgKeys);
+
+        // BARU: Tambahkan event listener untuk tombol clear
+        clearBtn.addEventListener('click', clearForm);
+
+        convertScriptBtn.addEventListener('click', () => {
+            const namaKlien = namaKlienEl.value;
+            const layanan = layananEl.value;
+            const serviceId = serviceIdEl.value;
+            const ipAddress = ipAddressEl.value;
+			const wgpriv = wgPrivateKeyEl.value;
+			const wgpub = wgPublicKeyEl.value;
+			const ipwan = IpWanEl.value;
+            
+            if (!namaKlien || !layanan || !serviceId || !ipAddress	) {
+                alert('Harap isi semua kolom input yang diperlukan!');
+                return;
+            }
+
+            // --- PERUBAHAN LOGIKA DI SINI ---
+            const limiterName = `IMP-${layanan} - ${serviceId} - ${namaKlien.toUpperCase()}`; // Prefix diubah jadi IMP
+            const layananNew = layanan + "M";
+            const comment = `------- vlan - ${namaKlien}`;
+            const targetIp = ipAddress;
+            const parent = parentNameEl.value; // Variabel baru
+            const limitat = Math.floor(parseInt(layanan) / 2) + "M"; // Variabel baru
+
+            const finalScript = `/interface wireguard peers add name="[BS] ${namaKlien}" interface=WG-BITSTREAM public-key="${wgpub}" allowed-address=${ipAddress}/32 client-address=${ipAddress}/32
+/queue simple add name="${limiterName}" target=${ipwan}/32 max-limit=${layananNew}/${layananNew} parent="${parent}" priority=8/8 limit-at=${limitat}/${limitat}`;
+
+			const finalSummary = `/ip dhcp-client add comment="[STD.NEXA] JANGAN DISABLE" default-route-distance=1 interface=ether1
+/interface wireguard add name=Wireguard-Nexa private-key="${wgpriv}"
+/ip address add address=${ipAddress}/24 interface=Wireguard-Nexa comment="[STD.NEXA] IP Monitoring NEXA"
+/interface wireguard peers add allowed-address=0.0.0.0/0 endpoint-address=116.254.117.230 endpoint-port=13231 interface=Wireguard-Nexa name=Peer-WG-Nexa public-key="N/LwVmgBrjtjuww/w2g1u71MtR2OL8LSrLLZaPFCjRk="
+/ip route add dst-address=111.68.27.8/30 gateway=10.251.86.1 comment="[STD.NEXA] Route Monitoring NEXA" check-gateway=ping
+/ip route add dst-address=116.254.113.4/30 gateway=10.251.86.1 comment="[STD.NEXA] Route Monitoring NEXA" check-gateway=ping
+/`;
+
+            outputScriptEl.value = finalScript;
+			outputScriptSumEl.value = finalSummary;
+        });
+        
+		copyScriptBtn.addEventListener('click', () => {
+			if (!outputScriptEl.value) {
+				alert('Tidak ada script untuk disalin!');
+				return;
+			}
+			navigator.clipboard.writeText(outputScriptEl.value).then(() => {
+				const originalText = copyScriptBtn.textContent;
+				copyScriptBtn.textContent = 'COPIED!';
+				copyScriptBtn.style.backgroundColor = '#28a745';
+				
+				setTimeout(() => {
+					copyScriptBtn.textContent = originalText;
+					copyScriptBtn.style.backgroundColor = '';
+				}, 2000);
+			}).catch(err => {
+				alert('Gagal menyalin script: ', err);
+			});
+		});
+
+		// BARU: Fungsi untuk tombol "COPY SUMMARY"
+		copySummaryBtn.addEventListener('click', () => {
+			if (!outputScriptSumEl.value) {
+				alert('Tidak ada Script NCDC untuk disalin!');
+				return;
+			}
+			navigator.clipboard.writeText(outputScriptSumEl.value).then(() => {
+				const originalText = copySummaryBtn.textContent;
+				copySummaryBtn.textContent = 'COPIED!';
+				copySummaryBtn.style.backgroundColor = '#28a745';
+				
+				setTimeout(() => {
+					copySummaryBtn.textContent = originalText;
+					copySummaryBtn.style.backgroundColor = '';
+				}, 2000);
+			}).catch(err => {
+				alert('Gagal menyalin Script NCDC: ', err);
+			});
+		});
+
+	</script>
+
+</body>
+</html>

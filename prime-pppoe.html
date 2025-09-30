@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRIME - PPPoE Provisioning</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="page-header">
+        <div class="header-container">
+            <a href="instalasi.html" class="back-button">Back</a>
+            <a href="index.html" class="back-button home">Home</a>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <h1 class="page-title">PRIME - PPPoE Provisioning</h1>
+
+        <section class="form-section">
+            <h2 class="section-title">INPUT</h2>
+            <div class="input-grid">
+                <div class="form-group">
+                    <label for="nama-klien">Nama Klien</label>
+                    <input type="text" id="nama-klien">
+                </div>
+                <div class="form-group">
+                    <label for="layanan">Layanan (Mbps)</label>
+                    <input type="number" id="layanan" placeholder="Contoh: 50">
+                </div>
+                <div class="form-group">
+                    <label for="service-id">Service ID</label>
+                    <input type="text" id="service-id">
+                </div>
+                <div class="form-group">
+                    <label for="user">User</label>
+                    <input type="text" id="user">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="text" id="password" readonly placeholder="Klik 'Generate Password'">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ip-address">IP Address</label>
+                    <input type="text" id="ip-address">
+                </div>
+                <div class="form-group">
+                    <label for="svlan">SVLAN</label>
+                    <input type="text" id="svlan">
+                </div>
+                <div class="form-group">
+                    <label for="cvlan">CVLAN</label>
+                    <input type="text" id="cvlan">
+                </div>
+                <div class="form-group">
+				  <label for="vlan-name">Vlan-name</label>
+				  <input type="text" id="vlan-name" readonly placeholder="Klik 'Generate Vlan Name'">
+				</div>
+            </div>
+        </section>
+        
+        <div class="action-buttons-container">
+			<button id="generate-vlanname-btn" class="form-button">GENERATE VLAN NAME</button>
+            <button id="generate-password-btn" class="form-button">GENERATE PASSWORD</button>
+            <button id="convert-script-btn" class="form-button primary">CONVERT SCRIPT</button>
+            <button id="clear-btn" class="form-button secondary">CLEAR</button>
+        </div>
+
+        <section class="form-section">
+            <h2 class="section-title">OUTPUT DR.KSP</h2>
+            <textarea id="output-script" readonly placeholder="Hasil script akan muncul di sini setelah klik 'Convert Script'..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn" class="form-button copy">COPY SCRIPT</button>
+        </div>
+		
+		<section class="form-section-summary">
+            <h2 class="section-title">OUTPUT DR.NCDC</h2>
+            <textarea id="output-script-summary" readonly placeholder="Output untuk DR.NCDC  ..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn-summary" class="form-button copy">COPY OUTPUT NCDC</button>
+        </div>
+
+    </main>
+
+    <script>
+	// --- PETA SVLAN -> NAMA PORT ---
+				const SVLAN_MAP = {
+				"3011": "-TT-1/1",
+				"3012": "-TT-1/2",
+				"3013": "-TT-1/3",
+				"3014": "-TT-1/4",
+				"3015": "-TT-1/5",
+				"3016": "-TT-1/6",
+				"3017": "-TT-1/7",
+				"3018": "-TT-1/8",
+				"3019": "-TT-1/9",
+				"3020": "-TT-1/10",
+				"3021": "-TT-1/11",
+				"3022": "-TT-1/12",
+				"3023": "-TT-1/13",
+				"3024": "-TT-1/14",
+				"3025": "-TT-1/15",
+				"3026": "-TT-1/16",
+				"3031": "-TT-2/1",
+				"3032": "-TT-2/2",
+				"3033": "-TT-2/3",
+				"3034": "-TT-2/4",
+				"3035": "-TT-2/5",
+				"3036": "-TT-2/6",
+				"3037": "-TT-2/7",
+				"3038": "-TT-2/8",
+				"3039": "-TT-2/9",
+				"3040": "-TT-2/10",
+				"3041": "-TT-2/11",
+				"3042": "-TT-2/12",
+				"3043": "-TT-2/13",
+				"3044": "-TT-2/14",
+				"3045": "-TT-2/15",
+				"3046": "-TT-2/16",
+				"3051": "-PND-1/1",
+				"3052": "-PND-1/2",
+				"3053": "-PND-1/3",
+				"3054": "-PND-1/4",
+				"3055": "-PND-1/5",
+				"3056": "-PND-1/6",
+				"3057": "-PND-1/7",
+				"3058": "-PND-1/8",
+				"3059": "-PND-1/9",
+				"3060": "-PND-1/10",
+				"3061": "-PND-1/11",
+				"3062": "-PND-1/12",
+				"3063": "-PND-1/13",
+				"3064": "-PND-1/14",
+				"3065": "-PND-1/15",
+				"3066": "-PND-1/16",
+				"3071": "-PND-2/1",
+				"3072": "-PND-2/2",
+				"3073": "-PND-2/3",
+				"3074": "-PND-2/4",
+				"3075": "-PND-2/5",
+				"3076": "-PND-2/6",
+				"3077": "-PND-2/7",
+				"3078": "-PND-2/8",
+				"3079": "-PND-2/9",
+				"3080": "-PND-2/10",
+				"3081": "-PND-2/11",
+				"3082": "-PND-2/12",
+				"3083": "-PND-2/13",
+				"3084": "-PND-2/14",
+				"3085": "-PND-2/15",
+				"3086": "-PND-2/16",
+				"3131": "-KSP-1/1",
+				"3132": "-KSP-1/2",
+				"3133": "-KSP-1/3",
+				"3134": "-KSP-1/4",
+				"3135": "-KSP-1/5",
+				"3136": "-KSP-1/6",
+				"3137": "-KSP-1/7",
+				"3138": "-KSP-1/8",
+				"3139": "-KSP-1/9",
+				"3140": "-KSP-1/10",
+				"3141": "-KSP-1/11",
+				"3142": "-KSP-1/12",
+				"3143": "-KSP-1/13",
+				"3144": "-KSP-1/14",
+				"3145": "-KSP-1/15",
+				"3146": "-KSP-1/16",
+				"3151": "-KSP-2/1",
+				"3152": "-KSP-2/2",
+				"3153": "-KSP-2/3",
+				"3154": "-KSP-2/4",
+				"3155": "-KSP-2/5",
+				"3156": "-KSP-2/6",
+				"3157": "-KSP-2/7",
+				"3158": "-KSP-2/8",
+				"3159": "-KSP-2/9",
+				"3160": "-KSP-2/10",
+				"3161": "-KSP-2/11",
+				"3162": "-KSP-2/12",
+				"3163": "-KSP-2/13",
+				"3164": "-KSP-2/14",
+				"3165": "-KSP-2/15",
+				"3166": "-KSP-2/16",
+				"3171": "-SMB-1/1",
+				"3172": "-SMB-1/2",
+				"3173": "-SMB-1/3",
+				"3174": "-SMB-1/4",
+				"3175": "-SMB-1/5",
+				"3176": "-SMB-1/6",
+				"3177": "-SMB-1/7",
+				"3178": "-SMB-1/8",
+				"3179": "-SMB-1/9",
+				"3180": "-SMB-1/10",
+				"3181": "-SMB-1/11",
+				"3182": "-SMB-1/12",
+				"3183": "-SMB-1/13",
+				"3184": "-SMB-1/14",
+				"3185": "-SMB-1/15",
+				"3186": "-SMB-1/16",
+				"3191": "-SMB-2/1",
+				"3192": "-SMB-2/2",
+				"3193": "-SMB-2/3",
+				"3194": "-SMB-2/4",
+				"3195": "-SMB-2/5",
+				"3196": "-SMB-2/6",
+				"3197": "-SMB-2/7",
+				"3198": "-SMB-2/8",
+				"3199": "-SMB-2/9",
+				"3200": "-SMB-2/10",
+				"3201": "-SMB-2/11",
+				"3202": "-SMB-2/12",
+				"3203": "-SMB-2/13",
+				"3204": "-SMB-2/14",
+				"3205": "-SMB-2/15",
+				"3206": "-SMB-2/16",
+				"3211": "-SMT-1/1",
+				"3212": "-SMT-1/2",
+				"3213": "-SMT-1/3",
+				"3214": "-SMT-1/4",
+				"3215": "-SMT-1/5",
+				"3216": "-SMT-1/6",
+				"3217": "-SMT-1/7",
+				"3218": "-SMT-1/8",
+				"3219": "-SMT-1/9",
+				"3220": "-SMT-1/10",
+				"3221": "-SMT-1/11",
+				"3222": "-SMT-1/12",
+				"3223": "-SMT-1/13",
+				"3224": "-SMT-1/14",
+				"3225": "-SMT-1/15",
+				"3226": "-SMT-1/16",
+				"3091": "-KRJT-1/1",
+				"3092": "-KRJT-1/2",
+				"3093": "-KRJT-1/3",
+				"3094": "-KRJT-1/4",
+				"3095": "-KRJT-1/5",
+				"3096": "-KRJT-1/6",
+				"3097": "-KRJT-1/7",
+				"3098": "-KRJT-1/8",
+				"3099": "-KRJT-1/9",
+				"3100": "-KRJT-1/10",
+				"3101": "-KRJT-1/11",
+				"3102": "-KRJT-1/12",
+				"3103": "-KRJT-1/13",
+				"3104": "-KRJT-1/14",
+				"3105": "-KRJT-1/15",
+				"3106": "-KRJT-1/16",
+				"4011": "-MALL-1/1",
+				"4012": "-MALL-1/2",
+				"4013": "-MALL-1/3",
+				"4014": "-MALL-1/4",
+				"4015": "-MALL-1/5",
+				"4031": "-APT-1/1",
+				"4032": "-APT-1/2",
+				"4033": "-APT-1/3",
+				"4034": "-APT-1/4",
+				"4035": "-APT-1/5",
+				"4036": "-APT-1/6",
+				"4037": "-APT-1/7",
+				"4038": "-APT-1/8",
+				"4017": "-SRL-1/7",
+				"4011": "-UT-1/1",
+				"4011": "-DPM-2/1",
+				"4012": "-DPM-2/2"
+				};
+
+				// --- Ambil tombol baru ---
+				const generateVlanNameBtn = document.getElementById('generate-vlanname-btn');
+
+				// --- Fungsi Generate Vlan Name ---
+				function generateVlanName() {
+				  const svlan = svlanEl.value.trim();
+				  const cvlanStr = cvlanEl.value.trim();
+
+				  if (!svlan) {
+					alert('Harap isi SVLAN terlebih dahulu!');
+					return;
+				  }
+				  if (!cvlanStr) {
+					alert('Harap isi CVLAN terlebih dahulu!');
+					return;
+				  }
+
+				  const vlanname1 = SVLAN_MAP[svlan]; // contoh: "3046" -> "-TT-2/16"
+				  if (!vlanname1) {
+					alert('svlan tidak ditemukan');
+					return;
+				  }
+
+				  const cvlanNum = parseInt(cvlanStr, 10);
+				  if (Number.isNaN(cvlanNum)) {
+					alert('CVLAN harus berupa angka yang valid!');
+					return;
+				  }
+
+				  const port = cvlanNum - 10; // aturanmu: port = cvlan - 10
+				  const finalVlanName = `vlan${cvlanNum}${vlanname1}:${port}`;
+
+				  vlanNameEl.value = finalVlanName;
+				}
+
+				// --- Event untuk tombol Generate Vlan Name ---
+				if (generateVlanNameBtn) {
+				  generateVlanNameBtn.addEventListener('click', generateVlanName);
+				}
+        // --- 1. Mendapatkan semua elemen dari HTML ---
+        const namaKlienEl = document.getElementById('nama-klien');
+        const layananEl = document.getElementById('layanan');
+        const serviceIdEl = document.getElementById('service-id');
+        const userEl = document.getElementById('user');
+        const passwordEl = document.getElementById('password');
+        const ipAddressEl = document.getElementById('ip-address');
+        const svlanEl = document.getElementById('svlan');
+        const cvlanEl = document.getElementById('cvlan');
+        const vlanNameEl = document.getElementById('vlan-name');
+        const snOnuEl = document.getElementById('sn-onu');
+        const outputScriptEl = document.getElementById('output-script');
+		const outputScriptSumEl = document.getElementById('output-script-summary');
+
+        const generatePasswordBtn = document.getElementById('generate-password-btn');
+        const convertScriptBtn = document.getElementById('convert-script-btn');
+        const copyScriptBtn = document.getElementById('copy-script-btn');
+		const copySummaryBtn = document.getElementById('copy-script-btn-summary');
+        const clearBtn = document.getElementById('clear-btn'); // BARU
+
+        // --- 2. Fungsi untuk Generate SN ONU ---
+        function generateSerialNumber() {
+            const prefix = "ZTEGCE";
+            const hexChars = "0123456789ABCDEF";
+            let sn = prefix;
+            for (let i = 0; i < 6; i++) {
+                sn += hexChars.charAt(Math.floor(Math.random() * hexChars.length));
+            }
+            return sn;
+        }
+
+        // --- 3. Fungsi untuk Generate Password ---
+        function generatePassword() {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            let password = "";
+            for (let i = 0; i < 10; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+        
+        // --- BARU: Fungsi untuk membersihkan semua input dan output ---
+        function clearForm() {
+            namaKlienEl.value = '';
+            layananEl.value = '';
+            serviceIdEl.value = '';
+            userEl.value = '';
+            passwordEl.value = '';
+            ipAddressEl.value = '';
+            svlanEl.value = '';
+            cvlanEl.value = '';
+            vlanNameEl.value = '';
+            outputScriptEl.value = '';
+			outputScriptSumEl.value = '';
+            // Fokuskan kembali ke input pertama untuk kemudahan
+            namaKlienEl.focus();
+        }
+
+        // --- 4. Event Listener untuk Tombol-tombol ---
+        generatePasswordBtn.addEventListener('click', () => {
+            passwordEl.value = generatePassword();
+        });
+
+        // BARU: Tambahkan event listener untuk tombol clear
+        clearBtn.addEventListener('click', clearForm);
+
+        convertScriptBtn.addEventListener('click', () => {
+            const namaKlien = namaKlienEl.value;
+            const layanan = layananEl.value;
+            const serviceId = serviceIdEl.value;
+            const ipAddress = ipAddressEl.value;
+            const svlan = svlanEl.value;
+            const cvlan = cvlanEl.value;
+            const vlanName = vlanNameEl.value;
+            
+            if (!namaKlien || !layanan || !serviceId || !ipAddress || !svlan || !cvlan || !vlanName) {
+                alert('Harap isi semua kolom input yang diperlukan!');
+                return;
+            }
+
+            const limiterName = `PRM-${layanan} - ${serviceId} - ${namaKlien.toUpperCase()}`;
+            const burstLimit = (parseInt(layanan) * 2) + "M";
+            const layananNew = layanan + "M";
+            const burstTress = (parseInt(layanan) - 1) + "M";
+            const target = ipAddress + "/32";
+            const comment = `------- vlan - ${namaKlien}`;
+            const svlanNew = `vlan${svlan}`;
+
+            const finalScript = `/interface vlan add vlan-id=${cvlan} name=${vlanName} comment="${comment}" interface=${svlanNew}
+/interface pppoe-server server add service-name=PRM.Service interface=${vlanName} disabled=no mrru=1600 default-profile=Dedicated
+/queue simple add burst-limit=${burstLimit}/${burstLimit} burst-threshold=${burstTress}/${burstTress} burst-time=20s/20s max-limit=${layananNew}/${layananNew} name="${limiterName}" target=${target}`;
+
+			const finalSummary = `/interface vlan add vlan-id=${cvlan} name=DR2---${vlanName} comment="${comment}" interface=DR2---${svlanNew}
+/interface pppoe-server server add service-name=PRM.Service interface=DR2---${vlanName} disabled=no mrru=1600 default-profile=Dedicated pado-delay=100
+/queue simple add burst-limit=${burstLimit}/${burstLimit} burst-threshold=${burstTress}/${burstTress} burst-time=20s/20s max-limit=${layananNew}/${layananNew} name="${limiterName}" target=${target}`;
+
+            outputScriptEl.value = finalScript;
+			outputScriptSumEl.value = finalSummary;
+        });
+        
+		copyScriptBtn.addEventListener('click', () => {
+			if (!outputScriptEl.value) {
+				alert('Tidak ada script untuk disalin!');
+				return;
+			}
+			navigator.clipboard.writeText(outputScriptEl.value).then(() => {
+				const originalText = copyScriptBtn.textContent;
+				copyScriptBtn.textContent = 'COPIED!';
+				copyScriptBtn.style.backgroundColor = '#28a745';
+				
+				setTimeout(() => {
+					copyScriptBtn.textContent = originalText;
+					copyScriptBtn.style.backgroundColor = '';
+				}, 2000);
+			}).catch(err => {
+				alert('Gagal menyalin script: ', err);
+			});
+		});
+
+		// BARU: Fungsi untuk tombol "COPY SUMMARY"
+		copySummaryBtn.addEventListener('click', () => {
+			if (!outputScriptSumEl.value) {
+				alert('Tidak ada Script NCDC untuk disalin!');
+				return;
+			}
+			navigator.clipboard.writeText(outputScriptSumEl.value).then(() => {
+				const originalText = copySummaryBtn.textContent;
+				copySummaryBtn.textContent = 'COPIED!';
+				copySummaryBtn.style.backgroundColor = '#28a745';
+				
+				setTimeout(() => {
+					copySummaryBtn.textContent = originalText;
+					copySummaryBtn.style.backgroundColor = '';
+				}, 2000);
+			}).catch(err => {
+				alert('Gagal menyalin Script NCDC: ', err);
+			});
+		});
+
+	</script>
+
+</body>
+</html>

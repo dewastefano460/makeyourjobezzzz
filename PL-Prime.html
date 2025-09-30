@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRIME - PPPoE Provisioning</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="page-header">
+        <div class="header-container">
+            <a href="ganti_layanan.html" class="back-button">Back</a>
+            <a href="index.html" class="back-button home">Home</a>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <h1 class="page-title">Ganti Layanan PRIME</h1>
+
+        <section class="form-section">
+            <h2 class="section-title">INPUT</h2>
+            <div class="input-grid">
+                <div class="form-group">
+                    <label for="nama-klien">Nama Klien</label>
+                    <input type="text" id="nama-klien">
+                </div>
+                <div class="form-group">
+                    <label for="layanan">Layanan (Mbps)</label>
+                    <input type="number" id="layanan" placeholder="Contoh: 50">
+                </div>
+                <div class="form-group">
+                    <label for="service-id">Service ID</label>
+                    <input type="text" id="service-id">
+                </div>
+                <div class="form-group">
+                    <label for="ip-address">IP Address</label>
+                    <input type="text" id="ip-address" placeholder="Sertakan CIDR">
+                </div>
+            </div>
+        </section>
+        
+        <div class="action-buttons-container">
+            <button id="convert-script-btn" class="form-button primary">CONVERT SCRIPT</button>
+            <button id="clear-btn" class="form-button secondary">CLEAR</button>
+        </div>
+
+        <section class="form-section">
+            <h2 class="section-title">OUTPUT</h2>
+            <textarea id="output-script" readonly placeholder="Hasil script akan muncul di sini setelah klik 'Convert Script'..."></textarea>
+        </section>
+
+        <div class="copy-button-container">
+            <button id="copy-script-btn" class="form-button copy">COPY SCRIPT</button>
+        </div>
+
+    </main>
+
+    <script>
+        // --- 1. Mendapatkan semua elemen dari HTML ---
+        const namaKlienEl = document.getElementById('nama-klien');
+        const layananEl = document.getElementById('layanan');
+        const serviceIdEl = document.getElementById('service-id');
+        const ipAddressEl = document.getElementById('ip-address');
+        const outputScriptEl = document.getElementById('output-script');
+        const convertScriptBtn = document.getElementById('convert-script-btn');
+        const copyScriptBtn = document.getElementById('copy-script-btn');
+        const clearBtn = document.getElementById('clear-btn'); // BARU
+
+       
+        // --- BARU: Fungsi untuk membersihkan semua input dan output ---
+        function clearForm() {
+            namaKlienEl.value = '';
+            layananEl.value = '';
+            serviceIdEl.value = '';
+            ipAddressEl.value = '';
+            outputScriptEl.value = '';
+            // Fokuskan kembali ke input pertama untuk kemudahan
+            namaKlienEl.focus();
+        }
+
+        // BARU: Tambahkan event listener untuk tombol clear
+        clearBtn.addEventListener('click', clearForm);
+
+        convertScriptBtn.addEventListener('click', () => {
+            const namaKlien = namaKlienEl.value;
+            const layanan = layananEl.value;
+            const serviceId = serviceIdEl.value;
+            const ipAddress = ipAddressEl.value;            
+            if (!namaKlien || !layanan || !serviceId || !ipAddress) {
+                alert('Harap isi semua kolom input yang diperlukan!');
+                return;
+            }
+
+            const limiterName = `PRM-${layanan} - ${serviceId} - ${namaKlien.toUpperCase()}`;
+            const burstLimit = (parseInt(layanan) * 2) + "M";
+            const layananNew = layanan + "M";
+            const burstTress = (parseInt(layanan) - 1) + "M";
+            const target = ipAddress;
+
+            const finalScript = `/queue simple remove [ find where target=${target} ]
+/queue simple add burst-limit=${burstLimit}/${burstLimit} burst-threshold=${burstTress}/${burstTress} burst-time=20s/20s max-limit=${layananNew}/${layananNew} name="${limiterName}" target=${target}`;
+
+            outputScriptEl.value = finalScript;
+        });
+        
+        copyScriptBtn.addEventListener('click', () => {
+            if (!outputScriptEl.value) {
+                alert('Tidak ada script untuk disalin!');
+                return;
+            }
+            navigator.clipboard.writeText(outputScriptEl.value).then(() => {
+                const originalText = copyScriptBtn.textContent;
+                copyScriptBtn.textContent = 'COPIED!';
+                copyScriptBtn.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    copyScriptBtn.textContent = originalText;
+                    copyScriptBtn.style.backgroundColor = '';
+                }, 2000);
+                
+            }).catch(err => {
+                alert('Gagal menyalin script: ', err);
+            });
+        });
+
+    </script>
+
+</body>
+</html>
