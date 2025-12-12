@@ -827,7 +827,7 @@
             document.getElementById('out-cs-prm').value = script;
         }
 
-        function processCsImp() {
+			function processCsImp() {
             // 1. Ambil Data
             const nama = document.getElementById('cs-imp-nama').value;
             const sid = document.getElementById('cs-imp-sid').value;
@@ -836,29 +836,31 @@
             const newIp = document.getElementById('cs-imp-new').value;
             const parent = document.getElementById('cs-imp-parent').value;
 
+            // Validasi: IP Lama boleh kosong kalau cuma ganti paket, tapi untuk summary "Ganti IP" sebaiknya diisi
             if(!nama || !bw || !newIp || !parent) return alert('Data belum lengkap bosku!');
 
-            // 2. Format Nama Baru
+            // 2. Format Nama Queue Baru
             const limiter = `IMP-${bw} - ${sid} - ${nama.toUpperCase()}`;
             const limitAt = Math.floor(parseInt(bw)/2) + "M";
             
-            // 3. Generate Script (Hapus Queue Lama (jika ada IP lama) -> Buat Queue Baru)
+            // 3. Generate Script Mikrotik
             let script = "";
             
-            // Jika user isi IP lama, buat script remove dulu
+            // Jika ada IP lama, buat command remove
             if(oldIp) {
                 let oldTarget = oldIp.includes('/') ? oldIp : oldIp + "/32";
                 script += `/queue simple remove [find target="${oldTarget}"]\n`;
             }
 
-            // Script create baru
+            // Command add queue baru
             let newTarget = newIp.includes('/') ? newIp : newIp + "/32";
             script += `/queue simple add name="${limiter}" target="${newTarget}" max-limit=${bw}M/${bw}M parent="${parent}" priority=8/8 limit-at=${limitAt}/${limitAt}`;
 
-            // 4. Buat Summary untuk Laporan
-            const summary = `UPDATE LAYANAN IMPRESSIVE\n---------------------------\nKlien    : ${nama}\nServiceID: ${sid}\nPaket Baru: ${bw} Mbps\nIP Address: ${newIp}`;
+            // 4. Generate Summary (SESUAI REQUEST)
+            // Format: Ganti IP <enter> Nama Klien = ... <enter> IP Lama = ... <enter> IP Baru = ...
+            const summary = `Ganti IP\nNama Klien = ${nama}\nIP Lama = ${oldIp}\nIP Baru = ${newIp}`;
 
-            // 5. Output
+            // 5. Output ke Textarea
             document.getElementById('out-cs-imp-1').value = script;
             document.getElementById('out-cs-imp-2').value = summary;
         }
@@ -868,3 +870,4 @@
     </script>
 </body>
 </html>
+
